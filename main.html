@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>口字接物游戏</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="game-shell">
+    <h1>口字接物游戏</h1>
+    <p class="desc">左右移动“口”接住食物。食物让口变大，非食物让口变小。</p>
+
+    <div class="hud">
+      <span>分数：<strong id="score">0</strong></span>
+      <span>口大小：<strong id="mouthSize">100%</strong></span>
+    </div>
+
+    <canvas id="gameCanvas" width="420" height="620"></canvas>
+    <p class="hint">操作：← → 或 A / D，移动端可直接拖动下方口字。</p>
+  </div>
+
+  <script src="./game.js"></script>
+</body>
+</html>
