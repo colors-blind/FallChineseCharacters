@@ -158,7 +158,7 @@ function renderItems() {
   ctx.font = `${config.itemFontSize}px sans-serif`;
 
   for (const item of state.items) {
-    ctx.fillStyle = item.isFood ? "#21a56a" : "#d9534f";
+    ctx.fillStyle = "#000000";
     ctx.fillText(item.char, item.x, item.y);
   }
 }
