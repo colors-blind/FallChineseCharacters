@@ -11,8 +11,8 @@ const config = {
   fallSpeedMax: 2.6,
   itemFontSize: 36,
   playerFontBaseSize: 64,
-  minScale: 0.45,
-  maxScale: 2.2,
+  minScale: 0.5,
+  maxScale: 2.5,
 };
 
 const foodChars = [
