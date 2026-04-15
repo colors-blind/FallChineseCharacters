@@ -50,6 +50,21 @@ function randomInRange(min, max) {
   return min + Math.random() * (max - min);
 }
 
+/**
+ * 计算口字的实际半宽
+ * 用于边界控制和碰撞检测，确保两者使用一致的宽度计算
+ * 
+ * 计算逻辑：
+ * - 基础字体大小：config.playerFontBaseSize (64px)
+ * - 宽度系数：0.8（汉字实际宽度约为字体大小的80%）
+ * - 半宽 = 字体大小 × 缩放比例 × 宽度系数 ÷ 2
+ * 
+ * @returns {number} 口字的半宽（像素）
+ */
+function getPlayerHalfWidth() {
+  return (config.playerFontBaseSize * state.playerScale * 0.8) / 2;
+}
+
 function spawnItem(timestamp) {
   const isFood = Math.random() < 0.62;
   const pool = isFood ? foodChars : nonFoodChars;
@@ -74,7 +89,7 @@ function updatePlayerPosition() {
     state.playerX += config.playerSpeed;
   }
 
-  const halfWidth = 18 * state.playerScale;
+  const halfWidth = getPlayerHalfWidth();
   state.playerX = clamp(state.playerX, halfWidth, canvas.width - halfWidth);
 }
 
@@ -95,16 +110,12 @@ function updatePlayerPosition() {
  */
 function isCaught(item) {
   // ========== 水平方向碰撞检测 ==========
-  // 口字的实际宽度：基于字体大小计算，约为字体大小的 0.8 倍
-  // 乘以缩放比例 state.playerScale 得到当前实际宽度
-  const playerActualWidth = config.playerFontBaseSize * state.playerScale * 0.8;
+  // 使用统一的 getPlayerHalfWidth() 函数计算口字半宽
+  // 确保与边界控制使用相同的宽度计算
+  const playerHalfWidth = getPlayerHalfWidth();
   
-  // 碰撞判定宽度：口字宽度的一半
-  // 当物体中心与口字中心的距离小于此值时，认为水平方向发生碰撞
-  const playerCatchWidth = playerActualWidth / 2;
-  
-  // 水平方向碰撞条件：物体中心与口字中心的距离小于碰撞判定宽度
-  const horizontalCollision = Math.abs(item.x - state.playerX) < playerCatchWidth;
+  // 水平方向碰撞条件：物体中心与口字中心的距离小于口字半宽
+  const horizontalCollision = Math.abs(item.x - state.playerX) < playerHalfWidth;
   
   // ========== 垂直方向碰撞检测 ==========
   // 物体的实际高度：约为字体大小的 0.8 倍
@@ -234,7 +245,7 @@ function bindPointerControl() {
   const moveByClientX = (clientX) => {
     const rect = canvas.getBoundingClientRect();
     const ratio = canvas.width / rect.width;
-    const halfWidth = 18 * state.playerScale;
+    const halfWidth = getPlayerHalfWidth();
     state.playerX = clamp((clientX - rect.left) * ratio, halfWidth, canvas.width - halfWidth);
   };
 
