@@ -234,7 +234,8 @@ function bindPointerControl() {
   const moveByClientX = (clientX) => {
     const rect = canvas.getBoundingClientRect();
     const ratio = canvas.width / rect.width;
-    state.playerX = clamp((clientX - rect.left) * ratio, 12, canvas.width - 12);
+    const halfWidth = 18 * state.playerScale;
+    state.playerX = clamp((clientX - rect.left) * ratio, halfWidth, canvas.width - halfWidth);
   };
 
   canvas.addEventListener("pointerdown", (e) => moveByClientX(e.clientX));
@@ -245,7 +246,97 @@ function bindPointerControl() {
   });
 }
 
+/**
+ * 全屏控制功能
+ * 支持点击按钮切换全屏模式，全屏时游戏区域占满整个屏幕
+ */
+function bindFullscreenControl() {
+  const fullscreenBtn = document.getElementById("fullscreenBtn");
+  const gameShell = document.querySelector(".game-shell");
+
+  /**
+   * 检查当前是否处于全屏模式
+   * 兼容不同浏览器的全屏API
+   */
+  function isFullscreen() {
+    return (
+      document.fullscreenElement ||
+      document.webkitFullscreenElement ||
+      document.mozFullScreenElement ||
+      document.msFullscreenElement
+    );
+  }
+
+  /**
+   * 更新按钮文字
+   * 根据当前全屏状态显示"全屏"或"退出全屏"
+   */
+  function updateButtonText() {
+    if (isFullscreen()) {
+      fullscreenBtn.textContent = "退出全屏";
+    } else {
+      fullscreenBtn.textContent = "全屏";
+    }
+  }
+
+  /**
+   * 进入全屏模式
+   * 兼容不同浏览器的全屏API
+   */
+  function enterFullscreen() {
+    if (gameShell.requestFullscreen) {
+      gameShell.requestFullscreen();
+    } else if (gameShell.webkitRequestFullscreen) {
+      gameShell.webkitRequestFullscreen();
+    } else if (gameShell.mozRequestFullScreen) {
+      gameShell.mozRequestFullScreen();
+    } else if (gameShell.msRequestFullscreen) {
+      gameShell.msRequestFullscreen();
+    }
+  }
+
+  /**
+   * 退出全屏模式
+   * 兼容不同浏览器的全屏API
+   */
+  function exitFullscreen() {
+    if (document.exitFullscreen) {
+      document.exitFullscreen();
+    } else if (document.webkitExitFullscreen) {
+      document.webkitExitFullscreen();
+    } else if (document.mozCancelFullScreen) {
+      document.mozCancelFullScreen();
+    } else if (document.msExitFullscreen) {
+      document.msExitFullscreen();
+    }
+  }
+
+  /**
+   * 切换全屏状态
+   */
+  function toggleFullscreen() {
+    if (isFullscreen()) {
+      exitFullscreen();
+    } else {
+      enterFullscreen();
+    }
+  }
+
+  // 绑定按钮点击事件
+  fullscreenBtn.addEventListener("click", toggleFullscreen);
+
+  // 监听全屏状态变化，更新按钮文字
+  document.addEventListener("fullscreenchange", updateButtonText);
+  document.addEventListener("webkitfullscreenchange", updateButtonText);
+  document.addEventListener("mozfullscreenchange", updateButtonText);
+  document.addEventListener("MSFullscreenChange", updateButtonText);
+
+  // 初始化按钮文字
+  updateButtonText();
+}
+
 window.addEventListener("keydown", onKeyDown);
 window.addEventListener("keyup", onKeyUp);
 bindPointerControl();
+bindFullscreenControl();
 requestAnimationFrame(gameLoop);
