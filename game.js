@@ -63,14 +63,52 @@ function updatePlayerPosition() {
   state.playerX = clamp(state.playerX, halfWidth, canvas.width - halfWidth);
 }
 
+/**
+ * 检测下落物体是否被口字接住
+ * 
+ * 碰撞检测原理：
+ * 1. 水平方向：物体中心与口字中心的距离小于口字宽度的一半
+ * 2. 垂直方向：物体底部接触到口字顶部时触发碰撞
+ * 
+ * 坐标系统说明：
+ * - 所有文字使用 textBaseline = "middle"，所以 y 坐标是文字中心点
+ * - 物体字体大小：config.itemFontSize (36px)
+ * - 口字字体大小：config.playerFontBaseSize * state.playerScale (64px * 缩放比例)
+ * 
+ * @param {Object} item - 下落物体对象，包含 x, y, char, isFood, speed 等属性
+ * @returns {boolean} - 是否发生碰撞
+ */
 function isCaught(item) {
-  const playerCatchWidth = 26 * state.playerScale;
-  const catchY = config.playerY;
-  return (
-    Math.abs(item.x - state.playerX) < playerCatchWidth &&
-    item.y + 8 >= catchY - 12 &&
-    item.y <= catchY + 16
-  );
+  // ========== 水平方向碰撞检测 ==========
+  // 口字的实际宽度：基于字体大小计算，约为字体大小的 0.8 倍
+  // 乘以缩放比例 state.playerScale 得到当前实际宽度
+  const playerActualWidth = config.playerFontBaseSize * state.playerScale * 0.8;
+  
+  // 碰撞判定宽度：口字宽度的一半
+  // 当物体中心与口字中心的距离小于此值时，认为水平方向发生碰撞
+  const playerCatchWidth = playerActualWidth / 2;
+  
+  // 水平方向碰撞条件：物体中心与口字中心的距离小于碰撞判定宽度
+  const horizontalCollision = Math.abs(item.x - state.playerX) < playerCatchWidth;
+  
+  // ========== 垂直方向碰撞检测 ==========
+  // 物体的实际高度：约为字体大小的 0.8 倍
+  // 物体底部 = 物体中心 + 物体高度的一半
+  const itemHeight = config.itemFontSize * 0.8;
+  const itemBottom = item.y + itemHeight / 2;
+  
+  // 口字的实际高度：基于字体大小计算，约为字体大小的 0.8 倍
+  // 口字顶部 = 口字中心 - 口字高度的一半
+  const playerHeight = config.playerFontBaseSize * state.playerScale * 0.8;
+  const playerTop = config.playerY - playerHeight / 2;
+  
+  // 垂直方向碰撞条件：物体底部接触到或超过口字顶部
+  // 这样物体一碰到口字顶部就会立即消失，而不是继续下落
+  const verticalCollision = itemBottom >= playerTop;
+  
+  // ========== 综合碰撞判定 ==========
+  // 只有水平和垂直方向都发生碰撞时，才认为物体被接住
+  return horizontalCollision && verticalCollision;
 }
 
 function onCatch(item) {
