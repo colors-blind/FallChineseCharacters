@@ -40,6 +40,7 @@ const state = {
   items: [],
   keys: { left: false, right: false },
   lastDropTime: 0,
+  isGameOver: false,
 };
 
 function clamp(value, min, max) {
@@ -203,7 +204,70 @@ function updateHud() {
   mouthSizeEl.textContent = `${Math.round(state.playerScale * 100)}%`;
 }
 
+/**
+ * 检测游戏结束条件
+ * 当口字缩小到最小值且分数小于等于0时，游戏结束
+ * 
+ * 结束条件：
+ * 1. 口字缩放比例等于最小值（50%）
+ * 2. 当前分数小于等于0
+ * 
+ * @returns {boolean} 是否满足游戏结束条件
+ */
+function checkGameOver() {
+  return state.playerScale <= config.minScale && state.score <= 0;
+}
+
+/**
+ * 显示游戏结束模态框
+ * 1. 暂停游戏循环
+ * 2. 显示最终得分
+ * 3. 显示模态框
+ */
+function showGameOverModal() {
+  state.isGameOver = true;
+
+  const modal = document.getElementById("gameOverModal");
+  const finalScoreEl = document.getElementById("finalScore");
+
+  finalScoreEl.textContent = String(state.score);
+  modal.classList.remove("hidden");
+}
+
+/**
+ * 隐藏游戏结束模态框
+ */
+function hideGameOverModal() {
+  const modal = document.getElementById("gameOverModal");
+  modal.classList.add("hidden");
+}
+
+/**
+ * 重新开始游戏
+ * 1. 隐藏模态框
+ * 2. 重置所有游戏状态
+ * 3. 重新启动游戏循环
+ */
+function restartGame() {
+  hideGameOverModal();
+
+  state.playerX = canvas.width / 2;
+  state.playerScale = 1;
+  state.score = 0;
+  state.items = [];
+  state.keys = { left: false, right: false };
+  state.lastDropTime = 0;
+  state.isGameOver = false;
+
+  updateHud();
+  requestAnimationFrame(gameLoop);
+}
+
 function gameLoop(timestamp) {
+  if (state.isGameOver) {
+    return;
+  }
+
   if (!state.lastDropTime) {
     state.lastDropTime = timestamp;
   }
@@ -214,6 +278,11 @@ function gameLoop(timestamp) {
 
   updatePlayerPosition();
   updateItems();
+
+  if (checkGameOver()) {
+    showGameOverModal();
+    return;
+  }
 
   renderBackground();
   renderItems();
@@ -346,8 +415,17 @@ function bindFullscreenControl() {
   updateButtonText();
 }
 
+/**
+ * 绑定重新开始按钮的点击事件
+ */
+function bindRestartControl() {
+  const restartBtn = document.getElementById("restartBtn");
+  restartBtn.addEventListener("click", restartGame);
+}
+
 window.addEventListener("keydown", onKeyDown);
 window.addEventListener("keyup", onKeyUp);
 bindPointerControl();
 bindFullscreenControl();
+bindRestartControl();
 requestAnimationFrame(gameLoop);
